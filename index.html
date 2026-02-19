@@ -965,44 +965,57 @@
     <!-- VÍDEOS LADO A LADO -->
     <div class="videos-row" style="display: flex; gap: 25px; margin: 30px 0; flex-wrap: wrap;">
       
-      <!-- Vídeo 1 -->
-      <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
-        <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
-          <span class="video-number simple" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(78, 201, 176, 0.2); color: #4ec9b0; font-weight: bold;">1</span>
-          <h3 class="video-title" id="how-simple-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 1</h3>
-          <span class="video-filename" id="how-simple-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">Off_side_simple.mp4</span>
-        </div>
-        
-        <div class="video-description-box" id="how-simple-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
-          <p>✅ Para usar: <strong style="color: var(--text-primary);">Eixo Y e Eixo Z em OFF</strong></p>
-        </div>
-
-        <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
-          <video controls style="width: 100%; display: block;" preload="metadata">
-            <source src="Off_side_simple_480P.mp4" type="video/mp4">
-            Seu navegador não suporta vídeo.
-          </video>
-        </div>
+    <!-- Vídeo 1 -->
+    <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+      <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span class="video-number simple" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(78, 201, 176, 0.2); color: #4ec9b0; font-weight: bold;">1</span>
+        <h3 class="video-title" id="how-simple-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 1</h3>
+        <span class="video-filename" id="how-simple-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">YouTube</span>
+      </div>
+      
+      <div class="video-description-box" id="how-simple-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
+        <p>✅ Para usar: <strong style="color: var(--text-primary);">Eixo Y e Eixo Z em OFF</strong></p>
       </div>
 
-      <!-- Vídeo 2 -->
-      <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
-        <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
-          <span class="video-number complex" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(197, 134, 192, 0.2); color: #c586c0; font-weight: bold;">2</span>
-          <h3 class="video-title" id="how-complex-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 2</h3>
-          <span class="video-filename" id="how-complex-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">Off_side_complex.mp4</span>
-        </div>
-        
-        <div class="video-description-box" id="how-complex-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
-          <p>⚠️ Para usar: <strong style="color: var(--text-primary);">Eixo Y e/ou Eixo Z em ON</strong></p>
-        </div>
+      <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+        <iframe 
+          width="100%" 
+          height="400" 
+          src="https://www.youtube.com/embed/xM_2hfvBCpI" 
+          title="Offside Detector - Simple Method" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen
+          style="display: block;">
+        </iframe>
+      </div>
+    </div>
 
-        <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
-          <video controls style="width: 100%; display: block;" preload="metadata">
-            <source src="Off_side_complex_480P.mp4" type="video/mp4">
-            Seu navegador não suporta vídeo.
-          </video>
-        </div>
+    <!-- Vídeo 2 -->
+    <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+      <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span class="video-number complex" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(197, 134, 192, 0.2); color: #c586c0; font-weight: bold;">2</span>
+        <h3 class="video-title" id="how-complex-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 2</h3>
+        <span class="video-filename" id="how-complex-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">YouTube</span>
+      </div>
+      
+      <div class="video-description-box" id="how-complex-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
+        <p>⚠️ Para usar: <strong style="color: var(--text-primary);">Eixo Y e/ou Eixo Z em ON</strong></p>
+      </div>
+
+      <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+        <iframe 
+          width="100%" 
+          height="400" 
+          src="https://www.youtube.com/embed/6HAWIXmENrs" 
+          title="Offside Detector - Complex Method" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen
+          style="display: block;">
+        </iframe>
+      </div>
+    </div>
       </div>
     </div>
 
