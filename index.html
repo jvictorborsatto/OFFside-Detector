@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offside Detector ⚽ | Detector de Impedimento</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Variáveis de tema - SEM VERDE */
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-tertiary: #1a1a1a;
+      --bg-card: #1e1e1e;
+      --border-color: #2a2a2a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --text-muted: #6b7280;
+      --accent-blue: #3b82f6;
+      --accent-blue-light: #60a5fa;
+      --accent-blue-dark: #2563eb;
+      --accent-red: #ef4444;
+      --accent-yellow: #f59e0b;
+      --card-hover: #262626;
+      --field-bg: #1a1a1a;
+      --field-line: #333333;
+      --accent-purple: #8b5cf6;
+      
+      /* Cores dos pontos */
+      --point-x: #0066cc;
+      --point-y: #9933ff;
+      --point-z: #00cccc;
+    }
+
+    /* Tema claro */
+    body.light-mode {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #e5e5e5;
+      --bg-tertiary: #d4d4d4;
+      --bg-card: #ffffff;
+      --border-color: #c0c0c0;
+      --text-primary: #171717;
+      --text-secondary: #404040;
+      --text-muted: #737373;
+      --card-hover: #f0f0f0;
+      --field-bg: #e0e0e0;
+      --field-line: #a0a0a0;
+    }
+
+    body {
+      background: var(--bg-primary);
+      min-height: 100vh;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .app {
+      max-width: 1600px;
+      margin: 0 auto;
+      background: var(--bg-secondary);
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-tertiary);
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 15px;
+    }
+
+    .theme-switch {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .theme-switch:hover {
+      background: var(--border-color);
+    }
+
+    .language-switch {
+      display: flex;
+      gap: 8px;
+    }
+
+    .language-switch button {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .language-switch button:hover {
+      background: var(--border-color);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--bg-tertiary);
+      padding: 0 30px;
+      gap: 5px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 16px 24px;
+      background: transparent;
+      border: none;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--text-primary);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-blue);
+    }
+
+    /* Layout principal */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Main area */
+    .main {
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Top bar com 3 elementos */
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    .upload-control {
+      flex: 2;
+    }
+
+    .upload-control input[type="file"] {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border: 2px dashed var(--border-color);
+      border-radius: 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .upload-control input[type="file"]:hover {
+      border-color: var(--accent-blue);
+      background: var(--bg-secondary);
+    }
+
+    .reset-btn {
+      flex: 0.8;
+    }
+
+    #reset {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    #reset:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .result-box {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .result-box span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    #resultado {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .result-box .offside {
+      color: var(--accent-red);
+    }
+
+    .result-box .legal {
+      color: var(--accent-blue);
+    }
+
+    /* Botões em linha */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .button-row button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    #eixoY.on {
+      background: var(--accent-purple);
+      border-color: var(--accent-purple);
+      color: white;
+    }
+
+    #direcao {
+      background: linear-gradient(135deg, var(--accent-blue-dark), var(--accent-blue));
+      color: white;
+      border: none;
+      flex: 1.5;
+    }
+
+    #eixoZ.on {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 20px;
+      background: var(--field-bg);
+      cursor: crosshair;
+      margin: 16px 0;
+      border: 1px solid var(--border-color);
+      display: block;
+    }
+
+    /* Painel de instruções */
+    .instructions-panel {
+      background: var(--bg-card);
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: fit-content;
+      max-height: 800px;
+    }
+
+    .panel-header {
+      background: var(--bg-tertiary);
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .panel-header h3 {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .panel-header p {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    /* Área de scroll */
+    .steps-scroll {
+      overflow-y: auto;
+      max-height: 600px;
+      padding: 4px 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-color) var(--bg-tertiary);
+    }
+
+    .steps-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .steps-scroll::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+    }
+
+    .steps-scroll::-webkit-scrollbar-thumb {
+      background-color: var(--border-color);
+      border-radius: 20px;
+    }
+
+    /* Cards de passo */
+    .step-card {
+      padding: 16px 20px;
+      margin: 4px 8px;
+      border-radius: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .step-card:hover {
+      background: var(--card-hover);
+      transform: translateX(4px);
+    }
+
+    .step-card.active-step {
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-blue);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    .step-card.completed-step {
+      opacity: 0.7;
+      border-left: 4px solid var(--text-muted);
+    }
+
+    .step-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-muted);
+      line-height: 1;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    .step-card.active-step .step-number {
+      color: var(--accent-blue);
+      opacity: 1;
+    }
+
+    .step-card.completed-step .step-number {
+      color: var(--text-muted);
+      opacity: 0.8;
+    }
+
+    .step-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .step-help {
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .step-note {
+      background: rgba(100, 116, 139, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      border: 1px solid rgba(100, 116, 139, 0.2);
+    }
+
+    /* Grid de 3 colunas para linhas - COM SCROLL HORIZONTAL */
+    .linhas-grid-container {
+      overflow-x: auto;
+      overflow-y: hidden;
+      margin: 12px 0;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-color) var(--bg-tertiary);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .linhas-grid-container::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .linhas-grid-container::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+    }
+
+    .linhas-grid-container::-webkit-scrollbar-thumb {
+      background-color: var(--border-color);
+      border-radius: 10px;
+    }
+
+    .linhas-grid {
+      display: flex;
+      gap: 12px;
+      width: max-content;
+      min-width: 100%;
+      padding: 0 4px;
+    }
+
+    .linha-card {
+      flex: 0 0 160px;
+      border-radius: 12px;
+      padding: 12px 10px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+    }
+
+    .linha-card:nth-child(1) {
+      background: rgba(0, 102, 204, 0.15);
+      border-left: 4px solid var(--point-x);
+    }
+
+    .linha-card:nth-child(2) {
+      background: rgba(153, 51, 255, 0.15);
+      border-left: 4px solid var(--point-y);
+    }
+
+    .linha-card:nth-child(3) {
+      background: rgba(0, 204, 204, 0.15);
+      border-left: 4px solid var(--point-z);
+    }
+
+    .linha-titulo {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .linha-titulo span {
+      font-size: 14px;
+    }
+
+    .linha-exemplo {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-left: 4px;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .linha-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding-left: 4px;
+      position: relative;
+      margin: 2px 0;
+      line-height: 1.3;
+    }
+
+    .linha-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .linha-icone {
+      font-size: 16px;
+      margin-right: 2px;
+    }
+
+    /* Eixos */
+    .eixo-explicacao {
+      margin: 12px 0;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .eixo-titulo {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .eixo-opcao {
+      margin: 6px 0;
+      padding-left: 24px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .eixo-opcao.off::before {
+      content: '◯';
+      position: absolute;
+      left: 4px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .eixo-opcao.on::before {
+      content: '●';
+      position: absolute;
+      left: 4px;
+      color: var(--accent-blue);
+      font-size: 14px;
+    }
+
+    .trave-note {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(100, 116, 139, 0.1);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .dica-final {
+      padding: 16px;
+      background: var(--bg-tertiary);
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .dica-final strong {
+      color: var(--accent-blue);
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ESTILOS PARA A ABA DE PDFS */
+    .pdf-container {
+      padding: 30px;
+      background: var(--bg-secondary);
+    }
+
+    .pdf-header {
+      margin-bottom: 30px;
+    }
+
+    .pdf-header h2 {
+      font-size: 28px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .pdf-header p {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    .pdf-buttons {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .pdf-btn {
+      flex: 1;
+      min-width: 250px;
+      padding: 18px 24px;
+      background: linear-gradient(135deg, var(--accent-blue-dark), var(--accent-blue));
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .pdf-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+    }
+
+    .pdf-btn.pdf-btn-pt {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .pdf-btn.pdf-btn-en {
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    }
+
+    .pdf-viewer-container {
+      background: var(--bg-card);
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .pdf-viewer-header {
+      background: var(--bg-tertiary);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pdf-viewer-header h3 {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .pdf-viewer-header span {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-left: auto;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 700px;
+      border: none;
+      background: var(--bg-primary);
+    }
+
+    .pdf-fallback {
+      padding: 40px;
+      text-align: center;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+
+    .pdf-fallback a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .pdf-fallback a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsividade */
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .pdf-frame {
+        height: 500px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .top-bar {
+        flex-direction: column;
+      }
+      
+      .button-row {
+        flex-direction: column;
+      }
+      
+      header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      
+      .header-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .pdf-buttons {
+        flex-direction: column;
+      }
+      
+      .pdf-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <h1 id="header-title">⚽ DETECTOR DE IMPEDIMENTO</h1>
+      <div class="header-controls">
+        <button class="theme-switch" onclick="toggleTheme()">🌓 TEMA</button>
+        <div class="language-switch">
+          <button onclick="setLanguage('pt')">🇧🇷 PT</button>
+          <button onclick="setLanguage('en')">🇺🇸 EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Abas principais - AGORA COM 3 ABAS -->
+    <div class="tabs">
+      <button class="tab active" onclick="openTab(event, 'detector')" id="tab-detector">🔍 DETECTOR</button>
+      <button class="tab" onclick="openTab(event, 'como-funciona')" id="tab-how">📚 GUIA DE USO </button>
+      <button class="tab" onclick="openTab(event, 'pdfs')" id="tab-pdfs">📄 COMO FUNCIONA</button>
+    </div>
+
+    <!-- Conteúdo do Detector -->
+    <div id="detector" class="tab-content active">
+      <div class="layout">
+        <!-- LEFT: Canvas e Controles -->
+        <div class="main">
+          <div class="top-bar">
+            <div class="upload-control">
+              <input type="file" id="upload" accept="image/*">
+            </div>
+            <div class="reset-btn">
+              <button id="reset">⟲ RESET</button>
+            </div>
+            <div class="result-box">
+              <span>📋</span>
+              <span id="resultado"></span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button id="eixoY">⬅️ EIXO Y: OFF</button>
+            <button id="direcao">⇦ Goal ⇨</button>
+            <button id="eixoZ">⬆️ EIXO Z: OFF</button>
+          </div>
+
+          <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- RIGHT: Painel de instruções -->
+        <div class="instructions-panel">
+          <div class="panel-header">
+            <h3 id="panel-title">📋 MANUAL RÁPIDO</h3>
+            <p id="panel-subtitle">Clique nos passos para ver detalhes</p>
+          </div>
+
+          <div class="steps-scroll">
+            <!-- PASSO 1 -->
+            <div class="step-card active-step" id="step1" onclick="selectStep(1)">
+              <div class="step-number">1</div>
+              <div class="step-title" id="step1-title">📸 CARREGAR IMAGEM</div>
+              <div class="step-desc" id="step1-desc">Escolha a foto do lance de impedimento</div>
+              <div class="step-help" id="step1-help"><strong>Print da TV, foto do celular...</strong> Qualquer imagem que mostre parte do campo e os jogadores.</div>
+            </div>
+
+            <!-- PASSO 2 -->
+            <div class="step-card" id="step2" onclick="selectStep(2)">
+              <div class="step-number">2</div>
+              <div class="step-title" id="step2-title">⚙️ CONFIGURAR EIXOS</div>
+              <div class="eixo-explicacao">
+                <div class="eixo-titulo" id="eixo-y-title"><span class="linha-icone">📏</span> EIXO Y - Linhas laterais (profundidade):</div>
+                <div class="eixo-opcao off" id="eixo-y-off">• Linhas retas na foto (paralelas à borda) → Y OFF</div>
+                <div class="eixo-opcao on" id="eixo-y-on">• Linhas inclinadas (convergindo) → Y ON</div>
+              </div>
+              <div class="eixo-explicacao">
+                <div class="eixo-titulo" id="eixo-z-title"><span class="linha-icone">⬆️</span> EIXO Z - Traves (altura):</div>
+                <div class="eixo-opcao off" id="eixo-z-off">• Traves retas na vertical → Z OFF</div>
+                <div class="eixo-opcao on" id="eixo-z-on">• Traves inclinadas → Z ON</div>
+                <div class="trave-note" id="trave-note">⚠️ Geralmente não é necessário configurar os eixos Y e Z em ON<br>⚠️ Se só uma trave estiver visível → Z OFF<br>⚠️ Se nenhuma trave estiver visível → Z OFF</div>
+              </div>
+            </div>
+
+            <!-- PASSO 3 -->
+            <div class="step-card" id="step3" onclick="selectStep(3)">
+              <div class="step-number">3</div>
+              <div class="step-title" id="step3-title">📏 MARCAR LINHAS DO CAMPO</div>
+              <div class="linhas-grid-container">
+                <div class="linhas-grid">
+                  <div class="linha-card">
+                    <div class="linha-titulo"><span>🅰️</span> <span id="horizontal-title">HORIZONTAIS</span></div>
+                    <div class="linha-exemplo" id="horizontal-example">Pequena área, linha de fundo</div>
+                    <div class="linha-desc"><strong id="first-line">1ª linha:</strong> 2 <span id="clicks">cliques</span></div>
+                    <div class="linha-desc"><strong id="second-line">2ª linha:</strong> 2 <span id="clicks2">cliques</span></div>
+                  </div>
+                  <div class="linha-card">
+                    <div class="linha-titulo"><span>🅱️</span> <span id="vertical-title">VERTICAIS</span></div>
+                    <div class="linha-exemplo" id="vertical-example">Laterais do campo, da área</div>
+                    <div class="linha-desc"><strong id="first-line2">1ª linha:</strong> 2 <span id="clicks3">cliques</span></div>
+                    <div class="linha-desc"><strong id="second-line2">2ª linha:</strong> 2 <span id="clicks4">cliques</span></div>
+                  </div>
+                  <div class="linha-card">
+                    <div class="linha-titulo"><span>⬆️</span> <span id="goal-title">TRAVES</span></div>
+                    <div class="linha-exemplo" id="goal-example">Postes do gol</div>
+                    <div class="linha-desc"><strong id="first-post">1ª linha:</strong> 2 <span id="clicks5">cliques</span> (1º poste/ 1st Goalposte)</div>
+                    <div class="linha-desc"><strong id="second-post">2ª linha:</strong> 2 <span id="clicks6">cliques</span> (2º poste/2nd Goalposte)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="step-help" id="step3-help">🎯 <strong>DICA:</strong> As linhas do corte da grama podem ajudar caso as marcações do campo não estejam visíveis.</div>
+            </div>
+
+            <!-- PASSO 4 -->
+            <div class="step-card" id="step4" onclick="selectStep(4)">
+              <div class="step-number">4</div>
+              <div class="step-title" id="step4-title">👥 MARCAR JOGADORES</div>
+              <div class="step-desc" id="step4-desc"><span style="color: #ef4444;">🔴 ATACANTE:</span> Pé → Avançado<br><span style="color: #f59e0b;">🟡 DEFENSOR:</span> Pé → Avançado</div>
+                           <div class="step-note" id="step4-note"><span style="color: white;">⚠️ Avançado = parte mais perto do gol (ombro, cabeça, joelho)<br>⚠️ Se o pé for mais avançado, os dois cliques no pé</span></div>
+            </div>
+
+            <!-- PASSO 5 -->
+            <div class="step-card" id="step5" onclick="selectStep(5)">
+              <div class="step-number">5</div>
+              <div class="step-title" id="step5-title">✅ VER RESULTADO</div>
+              <div class="step-desc" id="step5-desc">Use o Botão "⇦ Gol/Goal ⇨" para definir a direção do Gol</div>
+              <div class="step-help" id="step5-help">✅ LEGAL = Gol válido<br>🚨 OFFSIDE = Tá impedido</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+ <!-- Aba Guia de Uso -->
+<div id="como-funciona" class="tab-content">
+  <div class="how-container" style="padding: 30px;">
+    
+    <header style="margin-bottom: 30px; text-align: left; background: transparent; padding: 0;">
+      <h2 id="how-title" style="font-size: 28px; color: var(--text-primary); margin-bottom: 8px;">COM QUAL IMAGEM SEU LANCE SE PARECE?</h2>
+      <p id="how-subtitle" style="color: var(--text-secondary); font-size: 16px;"></p>
+    </header>
+
+    <!-- IMAGENS LADO A LADO -->
+    <div class="how-images-row" style="display: flex; gap: 25px; margin-bottom: 30px; flex-wrap: wrap;">
+      
+      <!-- Imagem 1 -->
+      <div class="how-image-card" style="flex: 1 1 300px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+        <div class="image-label" id="how-image1-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📸 IMAGEM 1</div>
+        <div class="image-placeholder" style="background: var(--bg-secondary); border-radius: 12px; height: 400px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color); overflow: hidden;">
+          <img src="comparison_simple.png" alt="Imagem comparativa simples" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="image-description" style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+          <strong id="how-image1-desc1" style="color: #ffffff;">✔️ Linhas verticais paralelas à borda</strong><br>
+          <strong id="how-image1-desc2">❌ Trave não visível ou apenas uma</strong><br>
+          <div class="badge-simple" id="how-image1-desc3" style="display: inline-block; margin-top: 12px; background: rgba(78, 201, 176, 0.15); padding: 4px 12px; border-radius: 20px; font-size: 16px; color: #4ec9b0;">➡️ Veja VÍDEO 1</div>
+        </div>
+      </div>
+
+      <!-- Imagem 2 -->
+      <div class="how-image-card" style="flex: 1 1 300px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+        <div class="image-label" id="how-image2-label" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📸 IMAGEM 2</div>
+        <div class="image-placeholder" style="background: var(--bg-secondary); border-radius: 12px; height: 400px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color); overflow: hidden;">
+          <img src="comparison_complex.png" alt="Imagem comparativa complexa" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="image-description" style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+          <strong id="how-image2-desc2" style="color: #ffffff;">✔️ Linhas verticais inclinadas</strong><br>
+          <strong id="how-image2-desc1" style="color: #ffffff;">✔️ Traves visíveis</strong><br>
+          <div class="badge-complex" id="how-image2-desc3" style="display: inline-block; margin-top: 12px; background: rgba(197, 134, 192, 0.15); padding: 4px 12px; border-radius: 20px; font-size: 16px; color: #c586c0;">➡️ Veja VÍDEO 2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nota explicativa -->
+    <div class="how-note-box" id="how-note" style="margin: 30px 0; padding: 20px; background: var(--bg-card); border-radius: 16px; border-left: 4px solid var(--accent-yellow); color: var(--text-secondary); font-size: 14px;">
+      <strong></strong>  📌 O método simples (VÌDEO 1) funciona para a maioria dos casos.
+    </div>
+
+    <!-- VÍDEOS LADO A LADO -->
+    <div class="videos-row" style="display: flex; gap: 25px; margin: 30px 0; flex-wrap: wrap;">
+      
+      <!-- Vídeo 1 -->
+      <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+        <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+          <span class="video-number simple" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(78, 201, 176, 0.2); color: #4ec9b0; font-weight: bold;">1</span>
+          <h3 class="video-title" id="how-simple-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 1</h3>
+          <span class="video-filename" id="how-simple-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">Off_side_simple.mp4</span>
+        </div>
+        
+        <div class="video-description-box" id="how-simple-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
+          <p>✅ Para usar: <strong style="color: var(--text-primary);">Eixo Y e Eixo Z em OFF</strong></p>
+        </div>
+
+        <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+          <video controls style="width: 100%; display: block;" preload="metadata">
+            <source src="videos/Off_side_simple.mp4" type="video/mp4">
+            Seu navegador não suporta vídeo.
+          </video>
+        </div>
+      </div>
+
+      <!-- Vídeo 2 -->
+      <div class="video-card" style="flex: 1 1 400px; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px;">
+        <div class="video-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+          <span class="video-number complex" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(197, 134, 192, 0.2); color: #c586c0; font-weight: bold;">2</span>
+          <h3 class="video-title" id="how-complex-title" style="font-size: 18px; color: var(--text-primary);">VÍDEO 2</h3>
+          <span class="video-filename" id="how-complex-video" style="font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); margin-left: auto;">Off_side_complex.mp4</span>
+        </div>
+        
+        <div class="video-description-box" id="how-complex-desc" style="background: var(--bg-secondary); padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary);">
+          <p>⚠️ Para usar: <strong style="color: var(--text-primary);">Eixo Y e/ou Eixo Z em ON</strong></p>
+          <p class="video-note" id="how-complex-note" style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">📌 Pode ativar apenas um eixo se necessário</p>
+        </div>
+
+        <div class="video-player" style="background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+          <video controls style="width: 100%; display: block;" preload="metadata">
+            <source src="videos/Off_side_complex.mp4" type="video/mp4">
+            Seu navegador não suporta vídeo.
+          </video>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé com dica -->
+    <div class="how-footer" id="how-footer" style="margin-top: 30px; padding: 20px; background: var(--bg-card); border-radius: 16px; text-align: center; font-size: 14px; color: var(--text-secondary); border: 1px solid var(--border-color);">
+      💡 <strong style="color: var(--text-primary);">Dica:</strong> Você pode usar apenas EIXO Y ou EIXO Z em ON!
+    </div>
+  </div>
+</div>
+
+    <!-- PDFs -->
+    <div id="pdfs" class="tab-content">
+      <div class="pdf-container">
+        <div class="pdf-header">
+          <h2 id="pdf-title">📚 COMO FUNCIONA O DETECTOR</h2>
+          <p id="pdf-subtitle"> </p>
+        </div>
+
+        <div class="pdf-viewer-container">
+          <div class="pdf-viewer-header">
+            <h3 id="pdf-viewer-title">📖 PDF</h3>
+            <span id="pdf-viewer-lang">Português</span>
+          </div>
+          
+          <iframe class="pdf-frame" id="pdf-frame" src="PDF_PT.pdf" title="Visualizador de PDF"></iframe>
+       
+          <div class="pdf-fallback" id="pdf-fallback" style="display: none;">
+            <p id="pdf-fallback-text">Seu navegador não pode exibir o PDF diretamente.</p>
+            <p><a href="PDF_PT.pdf" download id="pdf-download-link">📥 Clique aqui para baixar</a></p>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Objeto com todas as traduções
+    const translations = {
+      pt: {
+        headerTitle: "⚽ DETECTOR DE IMPEDIMENTO",
+        tabDetector: "🔍 DETECTOR",
+        tabHow: "📚 GUIA DE USO",
+        tabPdfs: "📄 COMO FUNCIONA",
+        reset: "⟲ RESET",
+        eixoY: "⬅️ EIXO Y: OFF",
+        direcao: "⇦ Gol ⇨",
+        eixoZ: "⬆️ EIXO Z: OFF",
+        panelTitle: "📋 MANUAL RÁPIDO",
+        panelSubtitle: "Clique nos passos para ver detalhes",
+        step1Title: "📸 CARREGAR IMAGEM",
+        step1Desc: "Escolha a foto do lance de impedimento",
+        step1Help: "<strong>Print da TV, foto do celular...</strong> Qualquer imagem que mostre parte do campo e os jogadores.",
+        step2Title: "⚙️ CONFIGURAR EIXOS",
+        eixoYTitle: "EIXO Y - Linhas laterais (profundidade):",
+        eixoYOff: "• Linhas retas na foto (paralelas à borda) → Y OFF",
+        eixoYOn: "• Linhas inclinadas (convergindo) → Y ON",
+        eixoZTitle: "EIXO Z - Traves (altura):",
+        eixoZOff: "• Traves retas na vertical → Z OFF",
+        eixoZOn: "• Traves inclinadas → Z ON",
+        traveNote: "⚠️ Geralmente não é necessário configurar os eixos Y e Z em ON\n⚠️ Se só uma trave estiver visível → Z OFF\n⚠️ Se nenhuma trave estiver visível → Z OFF",
+        step3Title: "MARCAR LINHAS DO CAMPO",
+        horizontalTitle: "HORIZONTAIS",
+        horizontalExample: "Pequena área, linha de fundo",
+        verticalTitle: "VERTICAIS",
+        verticalExample: "Laterais do campo, da área",
+        goalTitle: "TRAVES",
+        goalExample: "Postes do gol",
+        firstLine: "1ª linha:",
+        secondLine: "2ª linha:",
+        clicks: "cliques",
+        firstPost: "1ª linha:",
+        secondPost: "2ª linha:",
+        step3Help: "🎯 <strong>DICA:</strong> As linhas do corte da grama podem ajudar caso as marcações do campo não estejam visíveis.",
+        step4Title: "👥 MARCAR JOGADORES",
+        step4Desc: '<span style="color: #ef4444;">🔴 ATACANTE:</span> Pé → Avançado<br><span style="color: #f59e0b;">🟡 DEFENSOR:</span> Pé → Avançado',
+        step4Note: '<span style="color: white;">⚠️ Avançado = parte mais perto do gol (ombro, cabeça, joelho)<br>⚠️ Se o pé for mais avançado, os dois cliques no pé</span>',
+        step5Title: "✅ VER RESULTADO",
+        step5Desc: "Use o Botão '⇦ Gol/Goal ⇨' para definir a direção do Gol",
+        step5Help: "✅ LEGAL = Gol válido<br>🚨 OFFSIDE = Tá impedido",
+        
+        // Traduções da aba PDF
+        pdfTitle: "📚 COMO FUNCIONA O DETECTOR",
+        pdfViewerTitle: "📖 VISUALIZADOR PDF",
+        pdfViewerLang: "Português",
+        viewPt: "🇧🇷 Ver Português",
+        viewEn: "🇺🇸 View English",
+        pdfFallback: "Seu navegador não pode exibir o PDF diretamente.",
+        pdfDownload: "📥 Clique aqui para baixar",
+        
+        // Traduções da aba GUIA DE USO
+        howHeader: "COM QUAL IMAGEM SEU LANCE SE PARECE?",
+        howIdentifyTitle: "1. COMPARE A IMAGEM",
+        howIdentifyDesc: "Veja com qual imagem o lance que você quer comparar se parece mais:",
+        howImage1Label: "📸 IMAGEM 1",
+        howImage1File: "comparison_simple.jpg",
+        howImage1Desc1: "✔️ Linhas verticais paralelas à borda",
+        howImage1Desc2: "❌ Trave não visível ou apenas uma",
+        howImage1Desc3: "➡️ Veja VÍDEO 1",
+        howImage2Label: "📸 IMAGEM 2",
+        howImage2File: "comparison_complex.jpg",
+        howImage2Desc1: "✔️ Traves visíveis",
+        howImage2Desc2: "✔️ Linhas verticais inclinadas",
+        howImage2Desc3: "➡️ Veja VÍDEO 2",
+        howNote: "O método simples (VÌDEO 1) funciona para a maioria dos casos.",
+        howSimpleMethod: "VÍDEO 1",
+        howSimpleVideo: "Off_side_simple.mp4",
+        howSimpleDesc: "✅ Para usar: <strong>Eixo Y e Eixo Z em OFF</strong>",
+        howComplexMethod: "VÍDEO 2",
+        howComplexVideo: "Off_side_complex.mp4",
+        howComplexDesc: "⚠️ Para usar: <strong>Eixo Y e/ou Eixo Z em ON</strong>",
+        howComplexNote: "📌 Pode ativar apenas um eixo se necessário",
+        howFooter: "💡 <strong> Dica:</strong> Você pode usar apenas EIXO Y ou EIXO Z em ON!"
+      },
+      
+      en: {
+        headerTitle: "⚽ OFFSIDE DETECTOR",
+        tabDetector: "🔍 DETECTOR",
+        tabHow: "📚 USER GUIDE",
+        tabPdfs: "📄 HOW IT WORKS",
+        reset: "⟲ RESET",
+        eixoY: "⬅️ Y AXIS: OFF",
+        direcao: "⇦ Goal ⇨",
+        eixoZ: "⬆️ Z AXIS: OFF",
+        panelTitle: "📋 QUICK GUIDE",
+        panelSubtitle: "Click on steps for details",
+        step1Title: "📸 UPLOAD IMAGE",
+        step1Desc: "Choose the offside play photo",
+        step1Help: "<strong>TV screenshot, phone photo...</strong> Any image showing part of the field and players.",
+        step2Title: "⚙️ CONFIGURE AXES",
+        eixoYTitle: "Y AXIS - Sidelines (depth):",
+        eixoYOff: "• Straight lines in photo (parallel to edge) → Y OFF",
+        eixoYOn: "• Slanted lines (converging) → Y ON",
+        eixoZTitle: "Z AXIS - Goalposts (height):",
+        eixoZOff: "• Straight vertical goalposts → Z OFF",
+        eixoZOn: "• Slanted goalposts → Z ON",
+        traveNote: "⚠️ Usually not necessary to set Y and Z axes to ON\n⚠️ If only one goalpost is visible → Z OFF\n⚠️ If no goalposts are visible → Z OFF",
+        step3Title: "MARK FIELD LINES",
+        horizontalTitle: "HORIZONTAL",
+        horizontalExample: "Penalty box, goal line",
+        verticalTitle: "VERTICAL",
+        verticalExample: "Sidelines, area sides",
+        goalTitle: "GOALPOSTS",
+        goalExample: "Goal posts",
+        firstLine: "1st line:",
+        secondLine: "2nd line:",
+        clicks: "clicks",
+        firstPost: "1st line:",
+        secondPost: "2nd line:",
+        step3Help: "🎯 <strong>TIP:</strong> The grass mowing lines can help if the field markings are not visible",
+        step4Title: "👥 MARK PLAYERS",
+        step4Desc: '<span style="color: #ef4444;">🔴 ATTACKER:</span> Foot → Forward<br><span style="color: #f59e0b;">🟡 DEFENDER:</span> Foot → Forward',
+        step4Note: '<span style="color: white;">⚠️ Forward = body part closest to goal (shoulder, head, knee)<br>⚠️ If foot is the most forward, both clicks on the foot</span>',
+        step5Title: "✅ SEE RESULT",
+        step5Desc: "Use the '⇦ Gol/Goal ⇨' button to set the Goal direction",
+        step5Help: "✅ LEGAL = Valid goal<br>🚨 OFFSIDE = Offside",
+        
+        // Traduções da aba PDF
+        pdfTitle: "📚 HOW THE OFFSIDE DETECTOR WORKS",
+        pdfViewerTitle: "📖 PDF VIEWER",
+        pdfViewerLang: "English",
+        viewPt: "🇧🇷 View Portuguese",
+        viewEn: "🇺🇸 View English",
+        pdfFallback: "Your browser cannot display PDFs directly.",
+        pdfDownload: "📥 Click here to download",
+        
+        // Traduções da aba GUIA DE USO  (Inglês)
+        howHeader: "WHICH IMAGE DOES YOUR PLAY LOOK LIKE?",
+        howIdentifyTitle: "1. COMPARE THE PICTURES",
+        howIdentifyDesc: "See which image your play looks most like:",
+        howImage1Label: "📸 IMAGE 1",
+        howImage1File: "comparison_simple.jpg",
+        howImage1Desc1: "✔️ Vertical lines parallel to the edge",
+        howImage1Desc2: "❌ One or no goalpost not visible",
+        howImage1Desc3: "➡️ See VIDEO 1",
+        howImage2Label: "📸 IMAGE 2",
+        howImage2File: "comparison_complex.jpg",
+        howImage2Desc1: "✔️ Goalposts visible",
+        howImage2Desc2: "✔️ Slanted vertical lines",
+        howImage2Desc3: "➡️ See VIDEO 2",
+        howNote: "The simple method (VIDEO 1) works in most cases",
+        howSimpleMethod: "VIDEO 1",
+        howSimpleVideo: "Off_side_simple.mp4",
+        howSimpleDesc: "✅ To use: <strong>Y Axis and Z Axis OFF</strong>",
+        howComplexMethod: "VIDEO 2",
+        howComplexVideo: "Off_side_complex.mp4",
+        howComplexDesc: "⚠️ To use: <strong>Y Axis and/or Z Axis ON</strong>",
+        howComplexNote: "📌 You can activate only one axis if needed",
+        howFooter: "💡 <strong>Tip:</strong> You can switch ON only the Y axis or the Z axis"
+      }
+    };
+
+    let currentLang = 'pt';
+
+    // Função para selecionar passo
+    function selectStep(step) {
+      document.querySelectorAll('.step-card').forEach(card => {
+        card.classList.remove('active-step', 'completed-step');
+      });
+      
+      const selectedCard = document.getElementById(`step${step}`);
+      if (selectedCard) {
+        selectedCard.classList.add('active-step');
+        
+        for (let i = 1; i < step; i++) {
+          const prevCard = document.getElementById(`step${i}`);
+          if (prevCard) {
+            prevCard.classList.add('completed-step');
+          }
+        }
+        
+        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Função para desenhar o campo de futebol inicial
+    function drawSoccerField(ctx, width, height) {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, width, height);
+      
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 2;
+      
+      ctx.strokeRect(40, 40, width-80, height-80);
+      
+      ctx.beginPath();
+      ctx.moveTo(width/2, 40);
+      ctx.lineTo(width/2, height-40);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(width/2, height/2, 60, 0, Math.PI*2);
+      ctx.stroke();
+      
+      ctx.strokeRect(40, height/2-100, 120, 200);
+      ctx.strokeRect(width-160, height/2-100, 120, 200);
+      
+      ctx.strokeRect(40, height/2-60, 60, 120);
+      ctx.strokeRect(width-100, height/2-60, 60, 120);
+      
+      ctx.fillStyle = '#666666';
+      ctx.font = "bold 24px Inter";
+      ctx.textAlign = "center";
+      
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!canvas.hasAttribute('data-has-image')) {
+        drawSoccerField(ctx, canvas.width, canvas.height);
+      }
+    }
+
+    function openTab(event, tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      
+      document.getElementById(tabName).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Função para trocar o PDF no visualizador
+    function changePDF(lang) {
+      const pdfFrame = document.getElementById('pdf-frame');
+      const viewerLang = document.getElementById('pdf-viewer-lang');
+      const fallback = document.getElementById('pdf-fallback');
+      const downloadLink = document.getElementById('pdf-download-link');
+      
+      if (lang === 'pt') {
+        pdfFrame.src = 'PDF_PT.pdf';
+        viewerLang.innerText = currentLang === 'pt' ? 'Português' : 'Portuguese';
+        
+      } 
+        else {
+        pdfFrame.src = 'PDF_EN.pdf';
+        viewerLang.innerText = currentLang === 'en' ? 'Inglês' : 'English';
+        
+      }
+      
+      // Reset fallback visibility
+      pdfFrame.style.display = 'block';
+      fallback.style.display = 'none';
+      
+      // Mostrar fallback se o iframe falhar
+      pdfFrame.onerror = function() {
+        fallback.style.display = 'block';
+        pdfFrame.style.display = 'none';
+      };
+    }
+
+    // Função para atualizar o idioma
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      
+      changePDF(lang)
+
+      // Header e Tabs
+      document.getElementById('header-title').innerText = t.headerTitle;
+      document.getElementById('tab-detector').innerText = t.tabDetector;
+      document.getElementById('tab-how').innerText = t.tabHow;
+      document.getElementById('tab-pdfs').innerText = t.tabPdfs;
+      
+      // Botões principais
+      document.getElementById('reset').innerText = t.reset;
+      document.getElementById('eixoY').innerText = t.eixoY;
+      document.getElementById('direcao').innerText = t.direcao;
+      document.getElementById('eixoZ').innerText = t.eixoZ;
+      
+      // Painel
+      document.getElementById('panel-title').innerText = t.panelTitle;
+      document.getElementById('panel-subtitle').innerText = t.panelSubtitle;
+      
+      // Passo 1
+      document.getElementById('step1-title').innerText = t.step1Title;
+      document.getElementById('step1-desc').innerText = t.step1Desc;
+      document.getElementById('step1-help').innerHTML = t.step1Help;
+      
+      // Passo 2
+      document.getElementById('step2-title').innerText = t.step2Title;
+      document.getElementById('eixo-y-title').innerHTML = `<span class="linha-icone">📏</span> ${t.eixoYTitle}`;
+      document.getElementById('eixo-y-off').innerText = t.eixoYOff;
+      document.getElementById('eixo-y-on').innerText = t.eixoYOn;
+      document.getElementById('eixo-z-title').innerHTML = `<span class="linha-icone">⬆️</span> ${t.eixoZTitle}`;
+      document.getElementById('eixo-z-off').innerText = t.eixoZOff;
+      document.getElementById('eixo-z-on').innerText = t.eixoZOn;
+      document.getElementById('trave-note').innerHTML = t.traveNote.replace(/\n/g, '<br>');
+      
+      // Passo 3
+      document.getElementById('step3-title').innerText = t.step3Title;
+      document.getElementById('horizontal-title').innerText = t.horizontalTitle;
+      document.getElementById('horizontal-example').innerText = t.horizontalExample;
+      document.getElementById('vertical-title').innerText = t.verticalTitle;
+      document.getElementById('vertical-example').innerText = t.verticalExample;
+      document.getElementById('goal-title').innerText = t.goalTitle;
+      document.getElementById('goal-example').innerText = t.goalExample;
+      
+      document.querySelectorAll('#first-line, #first-line2').forEach(el => el.innerHTML = t.firstLine);
+      document.querySelectorAll('#second-line, #second-line2').forEach(el => el.innerHTML = t.secondLine);
+      document.querySelectorAll('#clicks, #clicks2, #clicks3, #clicks4, #clicks5, #clicks6').forEach(el => el.innerText = t.clicks);
+      document.getElementById('first-post').innerHTML = t.firstPost;
+      document.getElementById('second-post').innerHTML = t.secondPost;
+      document.getElementById('step3-help').innerHTML = t.step3Help;
+      
+      // Passo 4
+      document.getElementById('step4-title').innerText = t.step4Title;
+      document.getElementById('step4-desc').innerHTML = t.step4Desc;
+      document.getElementById('step4-note').innerHTML = t.step4Note;
+      
+      // Passo 5
+      document.getElementById('step5-title').innerText = t.step5Title;
+      document.getElementById('step5-desc').innerText = t.step5Desc;
+      document.getElementById('step5-help').innerHTML = t.step5Help;
+      
+      // Aba GUIA DE USO
+      document.getElementById('how-title').innerText = t.howHeader;
+
+    
+      document.getElementById('how-image1-label').innerText = t.howImage1Label;
+
+      document.getElementById('how-image1-desc1').innerHTML = t.howImage1Desc1;
+      document.getElementById('how-image1-desc2').innerText = t.howImage1Desc2;
+      document.getElementById('how-image1-desc3').innerHTML = t.howImage1Desc3;
+
+      document.getElementById('how-image2-label').innerText = t.howImage2Label;
+
+      document.getElementById('how-image2-desc1').innerHTML = t.howImage2Desc1;
+      document.getElementById('how-image2-desc2').innerHTML = t.howImage2Desc2;
+      document.getElementById('how-image2-desc3').innerHTML = t.howImage2Desc3;
+
+      document.getElementById('how-note').innerHTML = `<strong>📌</strong> ${t.howNote.replace('📌:', '')}`;
+
+      document.getElementById('how-simple-title').innerText = t.howSimpleMethod;
+      document.getElementById('how-simple-video').innerText = t.howSimpleVideo;
+      document.getElementById('how-simple-desc').innerHTML = t.howSimpleDesc;
+
+      document.getElementById('how-complex-title').innerText = t.howComplexMethod;
+      document.getElementById('how-complex-video').innerText = t.howComplexVideo;
+      document.getElementById('how-complex-desc').innerHTML = t.howComplexDesc;
+
+
+      document.getElementById('how-footer').innerHTML = t.howFooter;
+
+
+      // Aba PDF
+      document.getElementById('pdf-title').innerText = t.pdfTitle;
+      document.getElementById('pdf-btn-pt-text').innerText = t.pdfBtnPt;
+      document.getElementById('pdf-btn-en-text').innerText = t.pdfBtnEn;
+      document.getElementById('pdf-viewer-title').innerText = t.pdfViewerTitle;
+      
+      const viewerLang = document.getElementById('pdf-viewer-lang');
+      if (viewerLang.innerText === 'Português' || viewerLang.innerText === 'Portuguese') {
+        viewerLang.innerText = lang === 'pt' ? 'Português' : 'Portuguese';
+      } else {
+        viewerLang.innerText = lang === 'pt' ? 'Inglês' : 'English';
+      }
+      
+      document.getElementById('view-pt-btn').innerHTML = `🇧🇷 ${lang === 'pt' ? 'Ver Português' : 'View Portuguese'}`;
+      document.getElementById('view-en-btn').innerHTML = `🇺🇸 ${lang === 'pt' ? 'Ver Inglês' : 'View English'}`;
+      
+      document.getElementById('pdf-fallback-text').innerText = t.pdfFallback;
+      const downloadLink = document.getElementById('pdf-download-link');
+      if (downloadLink) {
+        downloadLink.innerHTML = t.pdfDownload;
+      }
+      
+
+      
+      // Redesenha canvas
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!canvas.hasAttribute('data-has-image')) {
+        drawSoccerField(ctx, canvas.width, canvas.height);
+      }
+      
+    }
+
+   
+
+    document.addEventListener('DOMContentLoaded', function() {
+      selectStep(1);
+      
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = 800;
+      canvas.height = 450;
+      
+      drawSoccerField(ctx, canvas.width, canvas.height);
+      
+      // Configura o PDF frame
+      const pdfFrame = document.getElementById('pdf-frame');
+      pdfFrame.onerror = function() {
+        document.getElementById('pdf-fallback').style.display = 'block';
+        pdfFrame.style.display = 'none';
+      };
+    });
+  </script>
+
+  
+  <script src="script.js"></script>
+
+    <!-- RODAPÉ FIXO -->
+  <footer style="text-align: center; padding: 16px 0; background: var(--bg-tertiary); border-top: 1px solid var(--border-color); font-size: 14px; color: var(--text-secondary); width: 100%;">
+    João Victor Basolli Borsatto - 2026
+  </footer>
+
+</body>
+</html>
